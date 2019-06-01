@@ -1,0 +1,521 @@
+<?php defined('BASEPATH') || exit('No direct script access allowed');
+
+/**
+ * Content controller
+ */
+class Content extends Admin_Controller
+{
+    protected $permissionCreate = 'Student_registration.Content.Create';
+    protected $permissionDelete = 'Student_registration.Content.Delete';
+    protected $permissionEdit   = 'Student_registration.Content.Edit';
+    protected $permissionView   = 'Student_registration.Content.View';
+
+    /**
+     * Constructor
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        
+        $this->auth->restrict($this->permissionView);
+        $this->load->model('student_registration/student_registration_model');
+        $this->load->model('school_institute/school_institute_model');
+        $this->load->model('qualification/qualification_model');
+        $this->load->model('subject/subject_model');
+        $this->load->model('year_or_semester/year_or_semester_model');
+        $this->load->model('course_wise_subjects/course_wise_subjects_model');
+        $this->load->model('address/address_model');
+        $this->load->model('course/course_model');
+        $this->lang->load('student_registration');
+        
+            Assets::add_css('flick/jquery-ui-1.8.13.custom.css');
+            Assets::add_js('jquery-ui-1.8.13.min.js');
+            $this->form_validation->set_error_delimiters("<span class='error'>", "</span>");
+        
+        Template::set_block('sub_nav', 'content/_sub_nav');
+
+        Assets::add_module_js('student_registration', 'student_registration.js');
+    }
+
+    /**
+     * Display a list of Student Registration data.
+     *
+     * @return void
+     */
+    public function index()
+    {
+        // Deleting anything?
+        if (isset($_POST['delete'])) {
+            $this->auth->restrict($this->permissionDelete);
+            $checked = $this->input->post('checked');
+            if (is_array($checked) && count($checked)) {
+
+                // If any of the deletions fail, set the result to false, so
+                // failure message is set if any of the attempts fail, not just
+                // the last attempt
+
+                $result = true;
+                foreach ($checked as $pid) {
+                    $deleted = $this->student_registration_model->delete($pid);
+                    if ($deleted == false) {
+                        $result = false;
+                    }
+                }
+                if ($result) {
+                    Template::set_message(count($checked) . ' ' . lang('student_registration_delete_success'), 'success');
+                } else {
+                    Template::set_message(lang('student_registration_delete_failure') . $this->student_registration_model->error, 'error');
+                }
+            }
+        }
+        
+        $records = $this->student_registration_model->where('deleted', 0)->find_all();
+
+        Template::set('records', $records);
+        
+        Template::set('toolbar_title', lang('student_registration_manage'));
+
+        Template::render();
+    }
+    
+    /**
+     * Create a Student Registration object.
+     *
+     * @return void
+     */
+    public function create()
+    {
+        $this->auth->restrict($this->permissionCreate);
+        
+        if (isset($_POST['save'])) 
+        {
+
+            if ($insert_id = $this->save_student_registration()) 
+            {
+                if($insert_id){
+                    if(!empty($_FILES['photo_image']['name']))
+                    {
+                        $config['upload_path']   = 'assets/student_photo';
+                        $config['allowed_types'] = 'jpg|gif|png|jpeg|JPG|PNG';
+                        $config['file_name']     =  $_FILES['photo_image']['name'];
+                        
+                        $this->load->library('upload', $config);
+                        $this->upload->initialize($config);
+                        if($this->upload->do_upload('photo_image'))
+                        {
+                            $fileDatas      = $this->upload->data();
+                            $data_item['photo']  = $fileDatas['file_name'];
+                        }
+                        else
+                        {
+                            $error          = array('error' => $this->upload->display_errors());
+                        }
+                    }else{
+                        $data_item['photo'] = '';
+                    }
+
+                    $this->db->where('id',$insert_id);
+                    $this->db->update('bf_registration',$data_item);
+
+                $permanent_address['street_address'] = $this->input->post('street_address_permanent');
+                $permanent_address['country'] = $this->input->post('country_permanent');
+                $permanent_address['state'] = $this->input->post('state_permanent');
+                $permanent_address['city'] = $this->input->post('city_permanent');
+                $permanent_address['zip_code'] = $this->input->post('zip_code_permanent');
+                $permanent_address['address_type'] = 'permanent';
+                $permanent_address['registration_id'] = $insert_id;
+                
+                $local_address['street_address'] = $this->input->post('street_address_local');
+                $local_address['country'] = $this->input->post('country_local');
+                $local_address['state'] = $this->input->post('state_local');
+                $local_address['city'] = $this->input->post('city_local');
+                $local_address['zip_code'] = $this->input->post('zip_code_local');
+                $local_address['address_type'] = 'local';
+                $local_address['registration_id'] = $insert_id;
+
+                $qualification['class'] = $this->input->post('class');
+                $qualification['streem'] = $this->input->post('streem');
+                $qualification['organization'] = $this->input->post('organization');
+                $qualification['board'] = $this->input->post('board');
+                $qualification['roll_no'] = $this->input->post('roll_no');
+                $qualification['totk_marks'] = $this->input->post('totk_marks');
+                $qualification['obtained_marks'] = $this->input->post('obtained_marks');
+                $qualification['pass_year'] = $this->input->post('pass_year');
+                $qualification['registration_id'] = $insert_id;
+
+                $last_school['institute_name'] = $this->input->post('institute_name');
+                $last_school['address'] = $this->input->post('address');
+                $last_school['country'] = $this->input->post('country_school');
+                $last_school['state'] = $this->input->post('state_school');
+                $last_school['city'] = $this->input->post('city_school');
+                $last_school['zip_code'] = $this->input->post('zip_code_school');
+                $last_school['registration_id'] = $insert_id;
+
+                $student_subject = $this->input->post('student_subject');
+                if(!empty($student_subject)){
+                    foreach($student_subject as $row){
+                        $data_student_subject['registration_id'] = $insert_id;
+                        $data_student_subject['subject_id'] = $row; 
+                        $data_student_subject['issued_subject_id'] = $this->input->post('subject_issued');
+                        $this->db->insert('bf_student_subjects',$data_student_subject);
+                    }
+                }
+
+                $this->db->insert('bf_address',$permanent_address);
+                $this->db->insert('bf_address',$local_address);
+                $this->db->insert('bf_qualification',$qualification);
+                $this->db->insert('bf_school_institute',$last_school);
+                }
+                log_activity($this->auth->user_id(), lang('student_registration_act_create_record') . ': ' . $insert_id . ' : ' . $this->input->ip_address(), 'student_registration');
+                Template::set_message(lang('student_registration_create_success'), 'success');
+
+                redirect(SITE_AREA . '/content/student_registration');
+            }
+
+            // Not validation error
+            if ( ! empty($this->student_registration_model->error)) {
+                Template::set_message(lang('student_registration_create_failure') . $this->student_registration_model->error, 'error');
+            }
+        }
+
+        $records = $this->db->get('bf_countries_1')->result();
+
+        Template::set('countries', $records);
+
+        $course = $this->course_model->where('deleted',0)->find_all();
+        Template::set('course', $course);
+
+        Template::set('toolbar_title', lang('student_registration_action_create'));
+
+        Template::render();
+    }
+    /**
+     * Allows editing of Student Registration data.
+     *
+     * @return void
+     */
+    public function edit()
+    {
+        $id = $this->uri->segment(5);
+        if (empty($id)) {
+            Template::set_message(lang('student_registration_invalid_id'), 'error');
+
+            redirect(SITE_AREA . '/content/student_registration');
+        }
+        
+        if (isset($_POST['save'])) {
+            $this->auth->restrict($this->permissionEdit);
+
+            if ($this->save_student_registration('update', $id)) {
+
+                if($id){
+
+                    if(!empty($_FILES['photo_image']['name']))
+                    {
+                        //Code Remove image from folder when we update student profile image
+                        $image = $this->db->get_where('bf_registration',array('id'=>$id))->row()->photo;
+
+                        $path = 'assets/student_photo/'; 
+                        $get_file = $path.$image; 
+                        if(file_exists($get_file)){ 
+                            unlink($get_file); 
+                        }
+
+                        $config['upload_path']   = 'assets/student_photo';
+                        $config['allowed_types'] = 'jpg|gif|png|jpeg|JPG|PNG';
+                        $config['file_name']     =  $_FILES['photo_image']['name'];
+                        
+                        $this->load->library('upload', $config);
+                        $this->upload->initialize($config);
+                        if($this->upload->do_upload('photo_image'))
+                        {
+                            $fileDatas      = $this->upload->data();
+                            $data_item['photo']  = $fileDatas['file_name'];
+                        }
+                        else
+                        {
+                            $error          = array('error' => $this->upload->display_errors());
+                        }
+                    }
+                    else
+                    {
+                        $data_item['photo'] = !empty($this->input->post('photo_hidden'))?$this->input->post('photo_hidden'):'';
+                    }
+
+                    $this->db->where('id',$id);
+                    $this->db->update('bf_registration',$data_item);
+
+                    $permanent_address['street_address'] = $this->input->post('street_address_permanent');
+                    $permanent_address['country'] = $this->input->post('country_permanent');
+                    $permanent_address['state'] = $this->input->post('state_permanent');
+                    $permanent_address['city'] = $this->input->post('city_permanent');
+                    $permanent_address['zip_code'] = $this->input->post('zip_code_permanent');
+                    $permanent_address['address_type'] = 'permanent';
+                    $permanent_address['registration_id'] = $id;
+                    
+                    $local_address['street_address'] = $this->input->post('street_address_local');
+                    $local_address['country'] = $this->input->post('country_local');
+                    $local_address['state'] = $this->input->post('state_local');
+                    $local_address['city'] = $this->input->post('city_local');
+                    $local_address['zip_code'] = $this->input->post('zip_code_local');
+                    $local_address['address_type'] = 'local';
+                    $local_address['registration_id'] = $id;
+
+                    $qualification['class'] = $this->input->post('class');
+                    $qualification['streem'] = $this->input->post('streem');
+                    $qualification['organization'] = $this->input->post('organization');
+                    $qualification['board'] = $this->input->post('board');
+                    $qualification['roll_no'] = $this->input->post('roll_no');
+                    $qualification['totk_marks'] = $this->input->post('totk_marks');
+                    $qualification['obtained_marks'] = $this->input->post('obtained_marks');
+                    $qualification['pass_year'] = $this->input->post('pass_year');
+                    $qualification['registration_id'] = $id;
+
+                    $last_school['institute_name'] = $this->input->post('institute_name');
+                    $last_school['address'] = $this->input->post('address');
+                    $last_school['country'] = $this->input->post('country_school');
+                    $last_school['state'] = $this->input->post('state_school');
+                    $last_school['city'] = $this->input->post('city_school');
+                    $last_school['zip_code'] = $this->input->post('zip_code_school');
+                    $last_school['registration_id'] = $id;
+
+                    //Update Student Subject
+                    $student_subject = $this->input->post('student_subject');
+                    if(!empty($student_subject)){
+
+                        //First Deleted Student Suject
+                        //Then Insert Student Subject
+                        $this->db->where('registration_id',$id);
+                        $this->db->delete('bf_student_subjects');
+
+                        foreach($student_subject as $row){
+                            $data_student_subject['registration_id'] = $id;
+                            $data_student_subject['subject_id'] = $row;
+                            $data_student_subject['issued_subject_id'] = $this->input->post('subject_issued');
+                            $this->db->insert('bf_student_subjects',$data_student_subject);
+                        }
+                    }
+
+                    //Update Student Permanent Address
+                    if($permanent_address){
+                        $chk_is_available = $this->db->get_where('bf_address',array('registration_id'=>$id,'address_type'=>'permanent'))->row();
+                        if(!empty($chk_is_available)){
+                            $this->db->where('registration_id',$id);
+                            $this->db->where('address_type','permanent');
+                            $this->db->update('bf_address',$permanent_address);
+                        }
+                        else{
+                            $this->db->insert('bf_address',$permanent_address);
+                        }
+                    }
+
+                    //Update Student Local Address
+                    if($local_address){
+                        $chk_is_available = $this->db->get_where('bf_address',array('registration_id'=>$id,'address_type'=>'local'))->row();
+                        if(!empty($chk_is_available)){
+                            $this->db->where('registration_id',$id);
+                            $this->db->where('address_type','local');
+                            $this->db->update('bf_address',$local_address);
+                        }else{
+                            $this->db->insert('bf_address',$local_address);
+                        }
+                    }
+
+                    //Update Student Qualification
+                    if($qualification){
+                        $chk_is_available = $this->db->get_where('bf_qualification',array('registration_id'=>$id))->row();
+                        if(!empty($chk_is_available)){
+                            $this->db->where('registration_id',$id);
+                            $this->db->update('bf_qualification',$qualification);
+                        }else{
+                           $this->db->insert('bf_qualification',$qualification);
+                        }
+                    }
+
+                    //Update Student Last School
+                    if($last_school){
+                        $chk_is_available = $this->db->get_where('bf_school_institute',array('registration_id'=>$id))->row();
+                        if(!empty($chk_is_available)){
+                            $this->db->where('registration_id',$id);
+                            $this->db->update('bf_school_institute',$last_school);
+                        }else{
+                            $this->db->insert('bf_school_institute',$last_school);
+                        }
+                    }
+                    
+                }
+
+                log_activity($this->auth->user_id(), lang('student_registration_act_edit_record') . ': ' . $id . ' : ' . $this->input->ip_address(), 'student_registration');
+                Template::set_message(lang('student_registration_edit_success'), 'success');
+                redirect(SITE_AREA . '/content/student_registration');
+            }
+
+            // Not validation error
+            if ( ! empty($this->student_registration_model->error)) {
+                Template::set_message(lang('student_registration_edit_failure') . $this->student_registration_model->error, 'error');
+            }
+        }
+        
+        elseif (isset($_POST['delete'])) {
+            $this->auth->restrict($this->permissionDelete);
+
+            if ($this->student_registration_model->delete($id)) {
+                log_activity($this->auth->user_id(), lang('student_registration_act_delete_record') . ': ' . $id . ' : ' . $this->input->ip_address(), 'student_registration');
+                Template::set_message(lang('student_registration_delete_success'), 'success');
+
+                redirect(SITE_AREA . '/content/student_registration');
+            }
+
+            Template::set_message(lang('student_registration_delete_failure') . $this->student_registration_model->error, 'error');
+        }
+
+        $records = $this->db->get('bf_countries_1')->result();
+
+        Template::set('countries', $records);
+
+        //School/Institute detail
+        $school_institute = $this->school_institute_model->find_by(array('registration_id'=>$id));
+        Template::set('school_institute', $school_institute);
+        if(!empty($school_institute->country)){
+            $school_state = $this->school_institute_model->getState($school_institute->country);
+            Template::set('school_state', $school_state);
+        }
+        if(!empty($school_institute->state)){
+            $school_city = $this->school_institute_model->getCity($school_institute->state);
+            Template::set('school_city', $school_city);
+        }
+
+        //Qualification
+        $qualification = $this->qualification_model->find_by(array('registration_id'=>$id));
+        Template::set('qualification', $qualification);
+
+        //Address
+        $address = $this->address_model->find_by(array('registration_id'=>$id,'address_type'=>'permanent'));
+        Template::set('address', $address);
+        if(!empty($address->country)){
+            $address_state = $this->address_model->getState($address->country);
+            Template::set('state', $address_state);   
+        }
+        if(!empty($address->state)){
+            $address_city = $this->address_model->getCity($address->state);
+            Template::set('city', $address_city);
+        }
+        
+
+        //Local Address
+        
+        $local_address = $this->address_model->find_by(array('registration_id'=>$id,'address_type'=>'local'));
+        Template::set('local_address', $local_address);
+        if(!empty($local_address->country)){
+        $local_state = $this->address_model->getState($local_address->country);
+        Template::set('local_state', $local_state);    
+        }
+        if(!empty($local_address->state)){
+        $local_city = $this->address_model->getCity($local_address->state);
+        Template::set('local_city', $local_city);
+        }
+
+        //Course List
+        $course = $this->course_model->where('deleted',0)->find_all();
+        Template::set('course', $course);
+
+        $student_registration = $this->student_registration_model->find($id);
+
+        //Student Subject List
+        //$student_subject = $this->db->get_where('bf_student_subjects',array('registration_id'=>$id))->result();
+        $this->db->select('bf_student_subjects.subject_id as sb_id');
+        $this->db->where('registration_id',$id);
+        $this->db->from('bf_student_subjects');
+        $query = $this->db->get();
+        $student_subject = $query->result();
+        Template::set('student_subject', $student_subject);
+
+        //Year Or Semester List By Course
+        $year_sem = $this->year_or_semester_model->where('course_id',$student_registration->course)->find_all();
+        Template::set('year_sem', $year_sem);
+
+        //Subject List By Course
+        $subject = $this->student_registration_model->getCourseWiseSubject($student_registration->year_semester,$student_registration->course);
+        Template::set('subject', $subject);
+
+        Template::set('student_registration', $student_registration);
+
+        Template::set('toolbar_title', lang('student_registration_edit_heading'));
+        Template::render();
+    }
+
+    //--------------------------------------------------------------------------
+    // !PRIVATE METHODS
+    //--------------------------------------------------------------------------
+
+    /**
+     * Save the data.
+     *
+     * @param string $type Either 'insert' or 'update'.
+     * @param int    $id   The ID of the record to update, ignored on inserts.
+     *
+     * @return boolean|integer An ID for successful inserts, true for successful
+     * updates, else false.
+     */
+    private function save_student_registration($type = 'insert', $id = 0)
+    {
+        if ($type == 'update') {
+            $_POST['id'] = $id;
+        }
+
+        // Validate the data
+        $this->form_validation->set_rules($this->student_registration_model->get_validation_rules());
+        if ($this->form_validation->run() === false) {
+            return false;
+        }
+
+        // Make sure we only pass in the fields we want
+        
+        $data = $this->student_registration_model->prep_data($this->input->post());
+
+        // Additional handling for default values should be added below,
+        // or in the model's prep_data() method
+        
+		$data['dob']	= $this->input->post('dob') ? $this->input->post('dob') : '0000-00-00';
+
+        $return = false;
+        if ($type == 'insert') {
+            $id = $this->student_registration_model->insert($data);
+
+            if (is_numeric($id)) {
+                $return = $id;
+            }
+        } elseif ($type == 'update') {
+            $return = $this->student_registration_model->update($id, $data);
+        }
+
+        return $return;
+    }
+
+    public function getStateByCountryId()
+    {
+        $contry_id = $this->input->post('country_id'); 
+        $state = $this->student_registration_model->getState($contry_id);
+
+        echo json_encode(array('token'=>$this->security->get_csrf_hash(),'data'=>$state));
+    }
+
+    public function getCityByStateId()
+    {
+        $state_id = $this->input->post('state_id'); 
+        $city = $this->student_registration_model->getCity($state_id);
+
+        echo json_encode(array('token'=>$this->security->get_csrf_hash(),'data'=>$city));
+    }
+
+    public function getCourseWiseSubject()
+    {
+        $year_semester = $this->input->post('year_semester'); 
+        $course = $this->input->post('course'); 
+        $subjects = $this->student_registration_model->getCourseWiseSubject($year_semester,$course);
+  
+        echo json_encode(array('token'=>$this->security->get_csrf_hash(),'data'=>$subjects));
+    }
+}

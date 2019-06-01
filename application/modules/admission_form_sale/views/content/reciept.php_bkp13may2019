@@ -1,0 +1,192 @@
+<div class='admin-box'>
+    <table style="margin:auto" class="mg-reciept">
+        <tr style="border-bottom:1px solid #868686">
+            <td><img src="http://cms.mpgc.org.in/assets/1.png"></td>
+            <td>
+                <h3 class="Mahila"> MAHILA P.G. COLLEGE </h3>
+                <h3>Civil Line, Bahriach (U.P)-271801 </h3>
+                <h5>Website : mpgc.org.in </h5>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><h4 style="text-align:center;"><span class="cash">Cash Reciept</span></h4></td>
+        </tr>
+        <tr>
+            <td><h4>Voucher No : <?php echo !empty($reciept_data->id)?$reciept_data->id:''?> </h4></td>
+            <td><h4 class="Date">Date : <?php echo date('Y-m-d')?> </h4></td>
+        </tr>
+        <tr>
+            <?php 
+                $f = new NumberFormatter("en", NumberFormatter::SPELLOUT);
+                $value_amount = !empty($reciept_data->amount)?$reciept_data->amount:0;
+            ?>
+            <td colspan="2">
+                <p class="pclass">
+                    Recieved from <b><span><?php echo !empty($reciept_data->student_name)?$reciept_data->student_name:''?></span></b> 
+                    the sum of <b><span><?php echo $f->format($value_amount); ?></span></b>
+                    for admission form with prospectus session 2019-2020
+                    class <b><span><?php echo !empty($course)?$course:''?></span></b>
+                    form no. <b><span><?php echo !empty($reciept_data->form_no)?$reciept_data->form_no:''?></span></b>
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td><h4 class="Amount">Amount Rs.: <?php echo $value_amount ?> </h4></td>
+            <td><h4 class="Authorized">Authorized Signature </h4></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <p style="">
+                    <input type='button' onclick="myFunction()" name='print' class='btn btn-primary' value="<?php echo lang('admission_form_sale_field_print'); ?>" />
+                    <?php echo anchor(SITE_AREA . '/content/admission_form_sale', lang('admission_form_sale_cancel'), 'class="btn btn-warning"'); ?>
+                </p>
+            </td>
+        </tr>
+    </table>
+</div>
+<style type="text/css">
+.mg-reciept {
+    max-width: 508px;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 3px solid;
+    padding: 0px 19px 0px 19px;
+    display: block;
+    border-radius: 20px;
+}
+.pclass {
+    text-align: justify;
+    font-family: Arial, sans-serif;
+    line-height:2.2;
+}
+.admin-box h3 
+{
+    color: #333;
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+    padding: 0 10px 0 0;
+    margin: 0;
+    font-weight: 700;
+    line-height: 21px;
+}  
+h4 {
+    font-size: 13.5px;
+    line-height: 9px;
+    margin-bottom: 22px;
+}
+h5 {
+    font-size: 13px;
+    line-height: 9px;
+}
+.Date{
+    float: right;
+}
+.Authorized{
+    float: right;
+}
+.cash{
+    font-size: 17px;
+    padding-bottom: 1px;
+    border-bottom: 1px solid #868686;
+}
+@media print
+{
+@page {
+    margin: 0 20;
+}
+.cash{
+    font-size: 17px;
+}
+h5 {
+    font-size: 13px;
+    line-height: 9px;
+    margin-top: 3px;
+}
+img{
+    width: 70px !important;
+}
+
+body *{
+     visibility: hidden; 
+}
+.btn-primary{ 
+    display: none;
+}
+.btn-warning{ 
+    display: none;
+}
+.admin-box *{ 
+    visibility: visible; 
+}
+.admin-box{
+     position: absolute; top: 40px; left: 30px;
+}
+
+*{
+    font-family: Arial, sans-serif !important;
+}
+.admin-box h3 
+{
+    color: #333;
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+    padding: 0 10px 0 0;
+    margin: 0;
+    font-weight: 700;
+    line-height: 21px;
+}
+
+.cash
+{
+    margin-top: 15px;
+    padding-bottom: 6px !important;
+    display: inline-block;
+    border-bottom: 1px solid #868686 !important;
+}
+h4 {
+    font-size: 13.5px;
+    line-height: 9px;
+    margin: 2px;
+    margin-bottom: 22px;
+}
+.mg-reciept {
+    max-width: 508px;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid;
+    padding: 0px 19px 0px 19px;
+    display: block;
+    border-radius: 4px;
+}
+.pclass {
+    text-align: justify;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    color: #464444;
+}
+.Date{
+    float: right;
+}
+.Authorized{
+    float: right;
+    margin-top:10px;
+    margin-bottom: 35px;
+}
+.Amount{
+    margin-top:10px;
+    margin-bottom: 35px;
+}
+.Mahila{
+    margin-top:10px !important;
+}
+
+}
+
+</style>
+<script>
+function myFunction() {
+  window.print();
+}
+</script>

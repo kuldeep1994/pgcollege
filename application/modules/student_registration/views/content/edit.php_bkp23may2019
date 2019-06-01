@@ -1,0 +1,881 @@
+<?php
+
+if (validation_errors()) :
+?>
+<div class='alert alert-block alert-error fade in'>
+    <a class='close' data-dismiss='alert'>&times;</a>
+    <h4 class='alert-heading'>
+        <?php echo lang('student_registration_errors_message'); ?>
+    </h4>
+    <?php echo validation_errors(); ?>
+</div>
+<?php
+endif;
+
+$id = isset($student_registration->id) ? $student_registration->id : '';
+
+?>
+
+<div class='admin-box registration_form'>
+    <h3>Student Registration</h3>
+    <?php echo form_open_multipart($this->uri->uri_string(), 'class="form"'); ?>
+    <input type='hidden' id="ci_csrf_token" name="ci_csrf_token" value='<?php echo $this->security->get_csrf_hash(); ?>'>
+        
+        <fieldset>
+            <div class="span12 student_image">
+            <?php if(empty($student_registration->photo)) { ?>
+                  <img id="blah" src="<?php echo site_url();?>assets/student_photo/student.jpeg" alt="student image" />
+            <?php } else { ?>
+                  <img id="blah" src="<?php echo site_url();?>assets/student_photo/<?php echo $student_registration->photo; ?>" alt="student image" />
+            <?php } ?>
+               <input type="file"  style="display:none;" name="photo_image" id="imgInp">
+               <input type="button" class="btn btn-primary" id="upload_image" value="Upload image">
+               <input type="hidden" name="photo_hidden" value="<?php echo set_value('registration_no', isset($student_registration->photo) ? $student_registration->photo : ''); ?>">
+            </div>
+        </fieldset>
+        
+        <fieldset>
+        
+        <div class="span4">
+
+            <div class="control-group<?php echo form_error('registration_no') ? ' error' : ''; ?>"> 
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_registration_no'), 'registration_no', array('class' => 'control-label')); ?>
+                    <input id='registration_no' type='text' name='registration_no' maxlength='100' value="<?php echo set_value('registration_no', isset($student_registration->registration_no) ? $student_registration->registration_no : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('registration_no'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('sr_no_for_old_student') ? ' error' : ''; ?>"> 
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_sr_no_for_old_student'), 'sr_no_for_old_student', array('class' => 'control-label')); ?>
+                    <input id='sr_no_for_old_student' type='text' name='sr_no_for_old_student' maxlength='100' value="<?php echo set_value('sr_no_for_old_student', isset($student_registration->sr_no_for_old_student) ? $student_registration->sr_no_for_old_student : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('sr_no_for_old_student'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('sr_no_for_new_student') ? ' error' : ''; ?>"> 
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_sr_no_for_new_student'), 'sr_no_for_new_student', array('class' => 'control-label')); ?>
+                    <input id='sr_no_for_new_student' type='text' name='sr_no_for_new_student' maxlength='100' value="<?php echo set_value('sr_no_for_new_student', isset($student_registration->sr_no_for_new_student) ? $student_registration->sr_no_for_new_student : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('sr_no_for_new_student'); ?></span>
+                </div>
+            </div>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options_1[''] = 'Please select course';
+                if(!empty($course)){
+                    foreach($course as $row){
+                        $options_1[$row->id] = $row->course_name;
+                    }
+                }
+                echo form_dropdown(array('name' => 'course', 'required' => 'required'), $options_1, set_value('course', isset($student_registration->course) ? $student_registration->course : ''), lang('student_registration_field_course') . lang('bf_form_label_required'));
+            ?>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options_2[''] = 'Please select year';
+                if(!empty($year_sem)){
+                    foreach($year_sem as $row){
+                        $options_2[$row->id] = $row->year_or_semester_name;
+                    }
+                }
+                echo form_dropdown(array('name' => 'year_semester', 'required' => 'required'), $options_2, set_value('year_semester', isset($student_registration->year_semester) ? $student_registration->year_semester : ''), lang('student_registration_field_year_semester') . lang('bf_form_label_required'));
+            ?>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                echo '<h6>'.lang('student_registration_field_student_subject').'</h6>';
+                $chk = '';
+                $array = array();
+                if(!empty($student_subject)){
+                    foreach($student_subject as $subject_11){
+                        $array[]=$subject_11->sb_id;
+                    }
+                }
+                    
+            ?>
+            <div id="student_subject_list">
+            <?php 
+                if(!empty($subject)){
+                    foreach($subject as $row){
+                        if(in_array($row->subject_id,$array)){
+                            $chk = 'checked';
+                        }
+                        else{
+                            $chk = '';
+                        }
+                        echo $row->title.'&nbsp<input type="checkbox" '.$chk.' name="student_subject[]" id="student_subject" value="'.$row->subject_id.'">';
+                    }
+                }
+            ?>
+            </div>
+
+            <div class="control-group<?php echo form_error('subject_issued') ? ' error' : ''; ?>"> 
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_subject_issued'), 'subject_issued', array('class' => 'control-label')); ?>
+                    <input id='subject_issued' type='text' name='subject_issued' maxlength='100' value="<?php echo set_value('subject_issued', isset($student_registration->subject_issued) ? $student_registration->subject_issued : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('subject_issued'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('first_name') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_first_name') . lang('bf_form_label_required'), 'first_name', array('class' => 'control-label')); ?>
+                    <input id='first_name' type='text' required='required' name='first_name' maxlength='30' value="<?php echo set_value('first_name', isset($student_registration->first_name) ? $student_registration->first_name : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('first_name'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('last_name') ? ' error' : ''; ?>">
+                 <div class='controls'>
+                 <?php echo form_label(lang('student_registration_field_last_name') . lang('bf_form_label_required'), 'last_name', array('class' => 'control-label')); ?>
+                    <input id='last_name' type='text' required='required' name='last_name' maxlength='30' value="<?php echo set_value('last_name', isset($student_registration->last_name) ? $student_registration->last_name : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('last_name'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('father_name') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_father_name') . lang('bf_form_label_required'), 'father_name', array('class' => 'control-label')); ?>
+                    <input id='father_name' type='text' required='required' name='father_name' maxlength='30' value="<?php echo set_value('father_name', isset($student_registration->father_name) ? $student_registration->father_name : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('father_name'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('mother_name') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_mother_name') . lang('bf_form_label_required'), 'mother_name', array('class' => 'control-label')); ?>
+                    <input id='mother_name' type='text' required='required' name='mother_name' maxlength='30' value="<?php echo set_value('mother_name', isset($student_registration->mother_name) ? $student_registration->mother_name : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('mother_name'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('guardian') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_guardian') . lang('bf_form_label_required'), 'guardian', array('class' => 'control-label')); ?>
+                    <input id='guardian' type='text' required='required' name='guardian' maxlength='30' value="<?php echo set_value('guardian', isset($student_registration->guardian) ? $student_registration->guardian : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('guardian'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('occupation') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_occupation') . lang('bf_form_label_required'), 'occupation', array('class' => 'control-label')); ?>
+                    <input id='occupation' type='text' required='required' name='occupation' maxlength='30' value="<?php echo set_value('occupation', isset($student_registration->occupation) ? $student_registration->occupation : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('occupation'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('parent_mobile') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_parent_mobile') . lang('bf_form_label_required'), 'parent_mobile', array('class' => 'control-label')); ?>
+                    <input id='parent_mobile' type='text' required='required' name='parent_mobile' maxlength='30' value="<?php echo set_value('parent_mobile', isset($student_registration->parent_mobile) ? $student_registration->parent_mobile : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('parent_mobile'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('nationality') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_nationality') . lang('bf_form_label_required'), 'nationality', array('class' => 'control-label')); ?>
+                    <input id='nationality' type='text' required='required' name='nationality' maxlength='30' value="<?php echo set_value('nationality', isset($student_registration->nationality) ? $student_registration->nationality : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('nationality'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('annual_income') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_annual_income'), 'annual_income', array('class' => 'control-label')); ?>
+                    <input id='annual_income' type='text' name='annual_income' maxlength='255' value="<?php echo set_value('annual_income', isset($student_registration->annual_income) ? $student_registration->annual_income : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('annual_income'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('relegion') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_relegion') . lang('bf_form_label_required'), 'relegion', array('class' => 'control-label')); ?>
+                    <input id='relegion' type='text' required='required' name='relegion' maxlength='30' value="<?php echo set_value('relegion', isset($student_registration->relegion) ? $student_registration->relegion : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('relegion'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('caste') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_caste') . lang('bf_form_label_required'), 'caste', array('class' => 'control-label')); ?>
+                    <input id='caste' type='text' required='required' name='caste' maxlength='30' value="<?php echo set_value('caste', isset($student_registration->caste) ? $student_registration->caste : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('caste'); ?></span>
+                </div>
+            </div>
+
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array(
+                    'OBC' => 'OBC',
+                    'SC' => 'SC',
+                    'ST' => 'ST',
+                    'GENERAL' => 'GENERAL',
+                );
+                echo form_dropdown(array('name' => 'cast_category', 'required' => 'required'), $options, set_value('cast_category', isset($student_registration->cast_category) ? $student_registration->cast_category : ''), lang('student_registration_field_cast_category') . lang('bf_form_label_required'));
+            ?>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array(
+                    'Minority' => 'Minority',
+                    'Handicapped' => 'Handicapped',
+                    'Freedom Fighter' => 'Freedom Fighter',
+                );
+                echo form_dropdown(array('name' => 'category_2', 'required' => 'required'), $options, set_value('category_2', isset($student_registration->category_2) ? $student_registration->category_2 : ''), lang('student_registration_field_category_2') . lang('bf_form_label_required'));
+            ?>
+
+            <div class="control-group<?php echo form_error('aadhar_number') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_aadhar_number') . lang('bf_form_label_required'), 'aadhar_number', array('class' => 'control-label')); ?>
+                    <input id='aadhar_number' type='text' required='required' name='aadhar_number'  value="<?php echo set_value('aadhar_number', isset($student_registration->aadhar_number) ? $student_registration->aadhar_number : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('aadhar_number'); ?></span>
+                </div>
+            </div>
+
+        </div>
+        <div class="span4">
+
+            <div class="control-group<?php echo form_error('account_no') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_account_no'), 'account_no', array('class' => 'control-label')); ?>
+                    <input id='account_no' type='text' name='account_no' maxlength='100' value="<?php echo set_value('account_no', isset($student_registration->account_no) ? $student_registration->account_no : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('account_no'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('bank_name_branch_name') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_bank_name_branch_name'), 'bank_name_branch_name', array('class' => 'control-label')); ?>
+                    <input id='bank_name_branch_name' type='text' name='bank_name_branch_name' maxlength='100' value="<?php echo set_value('bank_name_branch_name', isset($student_registration->bank_name_branch_name) ? $student_registration->bank_name_branch_name : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('bank_name_branch_name'); ?></span>
+                </div>
+            </div>
+            
+            <div class="control-group<?php echo form_error('ifsc_code') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_ifsc_code'), 'ifsc_code', array('class' => 'control-label')); ?>
+                    <input id='ifsc_code' type='text' name='ifsc_code' maxlength='100' value="<?php echo set_value('ifsc_code', isset($student_registration->ifsc_code) ? $student_registration->ifsc_code : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('ifsc_code'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('gender') ? ' error' : ''; ?>">
+                <div class='controls' aria-labelled-by='gender_label'>
+                <?php echo form_label(lang('student_registration_field_gender') . lang('bf_form_label_required'), '', array('class' => 'control-label', 'id' => 'gender_label')); ?>
+                    <label class='radio' for='gender_option1'>
+                        <input id='gender_option1' name='gender' type='radio' required='required' value='male' <?php echo set_radio('gender', 'option1', isset($student_registration->gender) && $student_registration->gender == 'male'); ?> />
+                        Male
+                    </label>
+                    <label class='radio' for='gender_option2'>
+                        <input id='gender_option2' name='gender' type='radio' required='required' value='female' <?php echo set_radio('gender', 'option2', isset($student_registration->gender) && $student_registration->gender == 'female'); ?> />
+                        Female
+                    </label>
+                    <span class='help-inline'><?php echo form_error('gender'); ?></span>
+                </div>
+            </div>    
+
+            <span class="heading_modules"><?php echo lang('student_registration_field_permanent_address'); ?></span>
+
+            <div class="control-group<?php echo form_error('street_address_permanent') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_street_address') . lang('bf_form_label_required'), 'street_address', array('class' => 'control-label')); ?>
+                    <?php echo form_textarea(array('name' => 'street_address_permanent', 'id' => 'street_address_permanent', 'rows' => '5', 'cols' => '80', 'value' => set_value('street_address_permanent', isset($address->street_address) ? $address->street_address : ''), 'required' => 'required')); ?>
+                    <span class='help-inline'><?php echo form_error('street_address'); ?></span>
+                </div>
+            </div>
+            
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select Country');
+                foreach($countries as $row){
+                    $options[$row->id] = $row->name; 
+                }
+                echo form_dropdown(array('name' => 'country_permanent', 'required' => 'required'), $options, set_value('country_permanent', isset($address->country) ? $address->country : ''), lang('student_registration_field_country') . lang('bf_form_label_required'));
+            ?>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select State');
+                if(!empty($state)){ 
+                    foreach($state as $row){
+                        $options[$row->id] = $row->name; 
+                    }
+                }
+                echo form_dropdown(array('name' => 'state_permanent', 'required' => 'required'), $options, set_value('state_permanent', isset($address->state) ? $address->state : ''), lang('student_registration_field_state') . lang('bf_form_label_required'));
+            ?>
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select City');
+                if(!empty($city)){ 
+                    foreach($city as $row){
+                        $options[$row->id] = $row->name; 
+                    }
+                }
+                echo form_dropdown(array('name' => 'city_permanent', 'required' => 'required'), $options, set_value('city_permanent', isset($address->city) ? $address->city : ''), lang('student_registration_field_city') . lang('bf_form_label_required'));
+            ?>
+
+            <div class="control-group<?php echo form_error('zip_code_permanent') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_code') . lang('bf_form_label_required'), 'zip_code_permanent', array('class' => 'control-label')); ?>
+                    <input id='zip_code_permanent' type='text' required='required' name='zip_code_permanent' maxlength='30' value="<?php echo set_value('zip_code_permanent', isset($address->zip_code) ? $address->zip_code : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('zip_code_permanent'); ?></span>
+                </div>
+            </div>
+
+            <span class="heading_modules"><?php echo lang('student_registration_field_local_address'); ?></span>
+
+            <div class="control-group<?php echo form_error('street_address_local') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_street_address') . lang('bf_form_label_required'), 'street_address', array('class' => 'control-label')); ?>
+                    <?php echo form_textarea(array('name' => 'street_address_local', 'id' => 'street_address_local', 'rows' => '5', 'cols' => '80', 'value' => set_value('street_address_local', isset($address->street_address) ? $address->street_address : ''), 'required' => 'required')); ?>
+                    <span class='help-inline'><?php echo form_error('street_address_local'); ?></span>
+                </div>
+            </div>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select Country');
+                if(!empty($countries)){
+                    foreach($countries as $row){
+                    $options[$row->id] = $row->name; 
+                    }
+                }
+                
+                echo form_dropdown(array('name' => 'country_local'), $options, set_value('country_local', isset($local_address->country) ? $local_address->country : ''), lang('student_registration_field_country') . lang('bf_form_label_required'));
+            ?>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select State');
+                if(!empty($local_state)){
+                    foreach($local_state as $row){
+                        $options[$row->id] = $row->name; 
+                    }
+                }
+                echo form_dropdown(array('name' => 'state_local'), $options, set_value('state_local', isset($local_address->state) ? $local_address->state : ''), lang('student_registration_field_state') . lang('bf_form_label_required'));
+            ?>
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select City');
+                if(!empty($local_city)){
+                    foreach($local_city as $row){
+                        $options[$row->id] = $row->name; 
+                    }
+                }
+                echo form_dropdown(array('name' => 'city_local'), $options, set_value('city_local', isset($local_address->city) ? $local_address->city : ''), lang('student_registration_field_city') . lang('bf_form_label_required'));
+            ?>
+
+            <div class="control-group<?php echo form_error('zip_code') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_code') . lang('bf_form_label_required'), 'zip_code_local', array('class' => 'control-label')); ?>
+                    <input id='zip_code_local' type='text' name='zip_code_local' maxlength='30' value="<?php echo set_value('zip_code_local', isset($local_address->zip_code) ? $local_address->zip_code : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('zip_code_local'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('dob') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_dob') . lang('bf_form_label_required'), 'dob', array('class' => 'control-label')); ?>
+                    <input id='dob' type='text' required='required' name='dob' maxlength='50' value="<?php echo set_value('dob', isset($student_registration->dob) ? $student_registration->dob : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('dob'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('birth_of_place') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_birth_of_place'), 'birth_of_place', array('class' => 'control-label')); ?>
+                    <input id='birth_of_place' type='text' name='birth_of_place' maxlength='100' value="<?php echo set_value('birth_of_place', isset($student_registration->birth_of_place) ? $student_registration->birth_of_place : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('birth_of_place'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('mobile_number') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_mobile_number'), 'mobile_number', array('class' => 'control-label')); ?>
+                    <input id='mobile_number' type='text' name='mobile_number'  value="<?php echo set_value('mobile_number', isset($student_registration->mobile_number) ? $student_registration->mobile_number : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('mobile_number'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('email_id') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_email_id'), 'email_id', array('class' => 'control-label')); ?>
+                    <input id='email_id' type='text' name='email_id' maxlength='75' value="<?php echo set_value('email_id', isset($student_registration->email_id) ? $student_registration->email_id : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('email_id'); ?></span>
+                </div>
+            </div>
+
+        </div>
+        <div class="span4">
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array(
+                    'Married' => 'Married',
+                    'Unmarried' => 'Unmarried',
+                );
+                echo form_dropdown(array('name' => 'martial_status', 'required' => 'required'), $options, set_value('martial_status', isset($student_registration->martial_status) ? $student_registration->martial_status: ''), lang('student_registration_field_martial_status') . lang('bf_form_label_required'));
+            ?>
+            
+            <div class="control-group<?php echo form_error('mark_of_identification') ? ' error' : ''; ?>">
+            
+            <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_mark_of_identification'), 'mark_of_identification', array('class' => 'control-label')); ?>
+                    <input id='mark_of_identification' type='text' name='mark_of_identification' maxlength='100' value="<?php echo set_value('mark_of_identification', isset($student_registration->mark_of_identification) ? $student_registration->mark_of_identification : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('mark_of_identification'); ?></span>
+                </div>
+            </div>
+
+            <span class="heading_modules"><?php echo lang('student_registration_field_last_school_details'); ?></span>
+
+            <div class="control-group<?php echo form_error('last_school_rool_no') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('student_registration_field_last_school_rool_no'), 'last_school_rool_no', array('class' => 'control-label')); ?>
+                    <input id='last_school_rool_no' type='text' name='last_school_rool_no' maxlength='100' value="<?php echo set_value('last_school_rool_no', isset($student_registration->last_school_rool_no) ? $student_registration->last_school_rool_no : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('last_school_rool_no'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('institute_name') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('school_institute_field_institute_name') . lang('bf_form_label_required'), 'institute_name', array('class' => 'control-label')); ?>
+                    <input id='institute_name' type='text' required='required' name='institute_name' maxlength='255' value="<?php echo set_value('institute_name', isset($school_institute->institute_name) ? $school_institute->institute_name : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('institute_name'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('address') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('school_institute_field_address'), 'address', array('class' => 'control-label')); ?>
+                    <?php echo form_textarea(array('name' => 'address', 'id' => 'address', 'rows' => '5', 'cols' => '80', 'value' => set_value('address', isset($school_institute->address) ? $school_institute->address : ''))); ?>
+                    <span class='help-inline'><?php echo form_error('address'); ?></span>
+                </div>
+            </div>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select Country');
+                if(!empty($countries)){
+                    foreach($countries as $row){
+                    $options[$row->id] = $row->name; 
+                    }
+                }
+                echo form_dropdown(array('name' => 'country_school', 'required' => 'required'), $options, set_value('country_school', isset($school_institute->country) ? $school_institute->country : ''), lang('school_institute_field_country') . lang('bf_form_label_required'));
+            ?>
+
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select State');
+                if(!empty($school_state)){
+                    foreach($school_state as $row){
+                    $options[$row->id] = $row->name;
+                    }
+                }
+                
+                echo form_dropdown(array('name' => 'state_school', 'required' => 'required'), $options, set_value('state_school', isset($school_institute->state) ? $school_institute->state : ''), lang('school_institute_field_state') . lang('bf_form_label_required'));
+            ?>
+            <?php // Change the values in this array to populate your dropdown as required
+                $options = array('' => 'Please Select City');
+                if(!empty($school_city)){
+                    foreach($school_city as $row){
+                        $options[$row->id] = $row->name;  
+                    }
+                }
+                echo form_dropdown(array('name' => 'city_school', 'required' => 'required'), $options, set_value('city_school', isset($school_institute->city) ? $school_institute->city : ''), lang('school_institute_field_city') . lang('bf_form_label_required'));
+            ?>
+
+            <div class="control-group<?php echo form_error('zip_code_school') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('school_institute_field_zip_code') . lang('bf_form_label_required'), 'zip_code', array('class' => 'control-label')); ?>
+                    <input id='zip_code_school' type='text' required='required' name='zip_code_school' maxlength='30' value="<?php echo set_value('zip_code_school', isset($school_institute->zip_code) ? $school_institute->zip_code : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('zip_code'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('disability') ? ' error' : ''; ?>">
+                <div class='controls' aria-labelled-by='disability_label'>
+                <?php echo form_label(lang('student_registration_field_disability') . lang('bf_form_label_required'), '', array('class' => 'control-label', 'id' => 'disability_label')); ?>
+                    <label class='radio' for='disability_option1'>
+                        <input id='disability_option1' name='disability' type='radio' required='required' value='yes' <?php echo set_radio('disability', 'option1', isset($student_registration->disability) && $student_registration->disability == 'yes'); ?> />
+                        Yes
+                    </label>
+                    <label class='radio' for='disability_option2'>
+                        <input id='disability_option2' name='disability' type='radio' required='required' value='no' <?php echo set_radio('disability', 'option2', isset($student_registration->disability) && $student_registration->disability == 'no'); ?> />
+                        No
+                    </label>
+                    <span class='help-inline'><?php echo form_error('disability'); ?></span>
+                </div>
+            </div>
+
+            <span class="heading_modules"><?php echo lang('school_institute_field_qualification');?></span>
+
+            <div class="control-group<?php echo form_error('class') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('qualification_field_class') . lang('bf_form_label_required'), 'class', array('class' => 'control-label')); ?>
+                    <input id='class' type='text' required='required' name='class' maxlength='150' value="<?php echo set_value('class', isset($qualification->class) ? $qualification->class : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('class'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('streem') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('qualification_field_streem'), 'streem', array('class' => 'control-label')); ?>
+                    <input id='streem' type='text' name='streem' maxlength='50' value="<?php echo set_value('streem', isset($qualification->streem) ? $qualification->streem : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('streem'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('organization') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('qualification_field_organization') . lang('bf_form_label_required'), 'organization', array('class' => 'control-label')); ?>
+                    <input id='organization' type='text' required='required' name='organization' maxlength='150' value="<?php echo set_value('organization', isset($qualification->organization) ? $qualification->organization : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('organization'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('board') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('qualification_field_board') . lang('bf_form_label_required'), 'board', array('class' => 'control-label')); ?>
+                    <input id='board' type='text' required='required' name='board' maxlength='200' value="<?php echo set_value('board', isset($qualification->board) ? $qualification->board : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('board'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('roll_no') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('qualification_field_roll_no') . lang('bf_form_label_required'), 'roll_no', array('class' => 'control-label')); ?>
+                    <input id='roll_no' type='text' required='required' name='roll_no' maxlength='100' value="<?php echo set_value('roll_no', isset($qualification->roll_no) ? $qualification->roll_no : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('roll_no'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('totk_marks') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('qualification_field_totk_marks') . lang('bf_form_label_required'), 'totk_marks', array('class' => 'control-label')); ?>
+                    <input id='totk_marks' type='text' required='required' name='totk_marks' maxlength='255' value="<?php echo set_value('totk_marks', isset($qualification->totk_marks) ? $qualification->totk_marks : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('totk_marks'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('obtained_marks') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('qualification_field_obtained_marks') . lang('bf_form_label_required'), 'obtained_marks', array('class' => 'control-label')); ?>
+                    <input id='obtained_marks' type='text' required='required' name='obtained_marks' maxlength='255' value="<?php echo set_value('obtained_marks', isset($qualification->obtained_marks) ? $qualification->obtained_marks : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('obtained_marks'); ?></span>
+                </div>
+            </div>
+
+            <div class="control-group<?php echo form_error('pass_year') ? ' error' : ''; ?>">
+                <div class='controls'>
+                <?php echo form_label(lang('qualification_field_pass_year') . lang('bf_form_label_required'), 'pass_year', array('class' => 'control-label')); ?>
+                    <input id='pass_year' type='text' required='required' name='pass_year' maxlength='255' value="<?php echo set_value('pass_year', isset($qualification->pass_year) ? $qualification->pass_year : ''); ?>" />
+                    <span class='help-inline'><?php echo form_error('pass_year'); ?></span>
+                </div>
+            </div>
+        </div>
+        </fieldset>
+        <fieldset class='form-actions'>
+            <input type='submit' name='save' class='btn btn-primary' value="<?php echo lang('student_registration_action_edit'); ?>" />
+            <?php echo lang('bf_or'); ?>
+            <?php echo anchor(SITE_AREA . '/content/student_registration', lang('student_registration_cancel'), 'class="btn btn-warning"'); ?>
+            
+            <?php if ($this->auth->has_permission('Student_Registration.Content.Delete')) : ?>
+                <?php echo lang('bf_or'); ?>
+                <button type='submit' name='delete' formnovalidate class='btn btn-danger' id='delete-me' onclick="return confirm('<?php e(js_escape(lang('student_registration_delete_confirm'))); ?>');">
+                    <span class='icon-trash icon-white'></span>&nbsp;<?php echo lang('student_registration_delete_record'); ?>
+                </button>
+            <?php endif; ?>
+        </fieldset>
+    <?php echo form_close(); ?>
+</div>
+
+<style>
+    .form-horizontal .control-group {
+    border-bottom: 1px solid #e5e5e5 !important;
+    padding-bottom: 0px !important;
+    border-bottom: 0px !important;
+    padding-top: 0px !important;
+    margin-bottom: 0 !important;
+    }
+
+    label, input, button, select, textarea {
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 20px;
+    }
+    span.heading_modules {
+    margin-left: 0;
+    font-size: 17px;
+    color: #0088cc;
+    } 
+    .registration_form .span4 {
+    width: 30.33%;
+    float: left;
+    } 
+    label {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 20px;
+    }
+    .registration_form .controls label {
+    text-align: left !important;
+    font-weight: 600;
+    }
+    #blah {
+    width: 88px;
+    height: 84px;
+    border: 1px solid;
+    border-radius: 7px;
+    margin-bottom: 5px;
+    }
+    .student_image {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 5px;
+    }
+
+</style>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script>
+
+    //Write code show image of student when we select a image
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#blah').attr('src', e.target.result);
+            }
+
+            reader.readAsDataURL(input.files[0]);
+
+        }
+    }
+    
+    $('#upload_image').click(function(){
+       $('#imgInp').trigger('click'); 
+    });
+
+    $("#imgInp").change(function(){
+        readURL(this);
+    });
+
+
+    var csrf_token = '<?php echo $this->security->get_csrf_hash(); ?>';
+
+    /* Get State*/
+
+    $('#country_permanent').on('change', function() {
+        var country_id = $(this).find(":selected").val();
+        var htm = '';
+        $('#state').html('');
+        
+        if(country_id!='')
+        {
+            $.ajax({
+                    type:'POST',
+                    dataType:'json',
+                    url: '<?php echo site_url(SITE_AREA) ?>/content/student_registration/getStateByCountryId',
+                    data: {'ci_csrf_token':csrf_token,'country_id':country_id},
+                    success:function(response)
+                    {
+                        $(response.data).each(function( index, element ) {
+
+                            htm += '<option value='+element.id+'>'+element.name+'</option>';
+
+                        });
+                        csrf_token = response.token;
+                        $('#state_permanent').html(htm);
+                        $('#ci_csrf_token').val(csrf_token);
+                    }
+            });
+        }
+    });
+    
+    /* Get City*/
+
+    $('#state_permanent').on('change', function() {
+        var state_id = $(this).find(":selected").val();
+        var htm = '';
+        $('#city').html('');
+        if(state_id!='')
+        {
+            $.ajax({
+                    type:'POST',
+                    dataType:'json',
+                    url: '<?php echo site_url(SITE_AREA) ?>/content/student_registration/getCityByStateId',
+                    data: {'ci_csrf_token':csrf_token,'state_id':state_id},
+                    success:function(response)
+                    {
+                        $(response.data).each(function( index, element ) {
+
+                            htm += '<option value='+element.id+'>'+element.name+'</option>';
+
+                        });
+                        csrf_token = response.token;
+                        $('#city_permanent').html(htm);
+                        $('#ci_csrf_token').val(csrf_token);
+                    }
+            });
+        }
+    });
+
+    $('#country_local').on('change', function() {
+        var country_id = $(this).find(":selected").val();
+        var htm = '';
+        $('#state').html('');
+        
+        if(country_id!='')
+        {
+            $.ajax({
+                    type:'POST',
+                    dataType:'json',
+                    url: '<?php echo site_url(SITE_AREA) ?>/content/student_registration/getStateByCountryId',
+                    data: {'ci_csrf_token':csrf_token,'country_id':country_id},
+                    success:function(response)
+                    {
+                        $(response.data).each(function( index, element ) {
+
+                            htm += '<option value='+element.id+'>'+element.name+'</option>';
+
+                        });
+                        csrf_token = response.token;
+                        $('#state_local').html(htm);
+                        $('#ci_csrf_token').val(csrf_token);
+                    }
+            });
+        }
+    });
+    
+    /* Get City*/
+
+    $('#state_local').on('change', function() {
+        var state_id = $(this).find(":selected").val();
+        var htm = '';
+        $('#city').html('');
+        if(state_id!='')
+        {
+            $.ajax({
+                    type:'POST',
+                    dataType:'json',
+                    url: '<?php echo site_url(SITE_AREA) ?>/content/student_registration/getCityByStateId',
+                    data: {'ci_csrf_token':csrf_token,'state_id':state_id},
+                    success:function(response)
+                    {
+                        $(response.data).each(function( index, element ) {
+
+                            htm += '<option value='+element.id+'>'+element.name+'</option>';
+
+                        });
+                        csrf_token = response.token;
+                        $('#city_local').html(htm);
+                        $('#ci_csrf_token').val(csrf_token);
+                    }
+            });
+        }
+    });
+
+    $('#country_school').on('change', function() {
+        var country_id = $(this).find(":selected").val();
+        var htm = '';
+        $('#state_school').html('');
+        
+        if(country_id!='')
+        {
+            $.ajax({
+                    type:'POST',
+                    dataType:'json',
+                    url: '<?php echo site_url(SITE_AREA) ?>/content/student_registration/getStateByCountryId',
+                    data: {'ci_csrf_token':csrf_token,'country_id':country_id},
+                    success:function(response)
+                    {
+                        $(response.data).each(function( index, element ) {
+
+                            htm += '<option value='+element.id+'>'+element.name+'</option>';
+
+                        });
+                        csrf_token = response.token;
+                        $('#state_school').html(htm);
+                        $('#ci_csrf_token').val(csrf_token);
+                    }
+            });
+        }
+    });
+    
+    /* Get City*/
+
+    $('#state_school').on('change', function() {
+        var state_id = $(this).find(":selected").val();
+        var htm = '';
+        $('#city_school').html('');
+        if(state_id!='')
+        {
+            $.ajax({
+                    type:'POST',
+                    dataType:'json',
+                    url: '<?php echo site_url(SITE_AREA) ?>/content/student_registration/getCityByStateId',
+                    data: {'ci_csrf_token':csrf_token,'state_id':state_id},
+                    success:function(response)
+                    {
+                        $(response.data).each(function( index, element ) {
+
+                            htm += '<option value='+element.id+'>'+element.name+'</option>';
+
+                        });
+                        csrf_token = response.token;
+                        $('#city_school').html(htm);
+                        $('#ci_csrf_token').val(csrf_token);
+                    }
+            });
+        }
+    });
+
+    $('#year_semester').on('change', function() {
+        var year_semester = $(this).find(":selected").val();
+        var course = $('#course').find(":selected").val();
+        var htm = '';
+        $('#student_subject_list').html('');
+        if(year_semester!='' && course!='')
+        {
+            $.ajax({
+                    type:'POST',
+                    dataType:'json',
+                    url: '<?php echo site_url(SITE_AREA) ?>/content/student_registration/getCourseWiseSubject',
+                    data: {'ci_csrf_token':csrf_token,'year_semester':year_semester,'course':course},
+                    success:function(response)
+                    {
+                        $(response.data).each(function( index, element ) {
+                            htm += element.title+'&nbsp<input type="checkbox" name="student_subject[]" id="student_subject" value='+element.subject_id+'>';
+                        });
+                        csrf_token = response.token;
+                        $('#student_subject_list').html(htm);
+                        $('#ci_csrf_token').val(csrf_token);
+                    }
+            });
+        }
+    });
+
+    $('#course').on('change', function() {
+        var course = $(this).find(":selected").val();
+        var htm_htm = '';
+        $('#year_semester').html('');
+        $('#student_subject_list').html('');
+        if(course!='')
+        {
+            $.ajax({
+                    type:'POST',
+                    dataType:'json',
+                    url: '<?php echo site_url(SITE_AREA) ?>/master/course_wise_subjects/getYearOrSemester',
+                    data: {'ci_csrf_token':csrf_token,'course_id':course},
+                    success:function(response)
+                    {
+                        $(response.data).each(function( index, element ) {
+
+                            htm_htm += '<option value='+element.id+'>'+element.year_or_semester_name+'</option>';
+
+                        });
+                        csrf_token = response.token;
+                        $('#year_semester').html(htm_htm);
+                        $('#ci_csrf_token').val(csrf_token);
+                    }
+            });
+        }
+    });
+</script>
+
+
